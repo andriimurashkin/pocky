@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Barcode lines forming a stylized "P" shape -->
+    <!-- Vertical stem of P -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,28 L38,28 L38,80 L34,80 Z" />
+
+    <!-- Barcode-style lines for the bowl of P -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,28 L44,28 L44,56 L42,56 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M47,28 L50,28 L50,56 L47,56 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M53,28 L55,28 L55,56 L53,56 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M58,28 L61,28 L61,56 L58,56 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M64,28 L66,28 L66,56 L64,56 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M69,30 L71,30 L71,54 L69,54 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M73,33 L75,33 L75,51 L73,51 Z" />
+
+    <!-- Extra barcode lines below (extending from stem) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,60 L44,60 L44,80 L42,80 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M47,60 L50,60 L50,80 L47,80 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M53,60 L55,60 L55,75 L53,75 Z" />
+</vector>

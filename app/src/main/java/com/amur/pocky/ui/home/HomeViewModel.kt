@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -19,6 +20,17 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
+
+    private val _barcodeCardId = MutableStateFlow<Long?>(null)
+    val barcodeCardId: StateFlow<Long?> = _barcodeCardId
+
+    fun showBarcode(cardId: Long) {
+        _barcodeCardId.value = cardId
+    }
+
+    fun hideBarcode() {
+        _barcodeCardId.value = null
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val cards: StateFlow<List<Card>> = searchQuery
@@ -30,5 +42,17 @@ class HomeViewModel @Inject constructor(
 
     fun onSearchQueryChange(query: String) {
         searchQuery.value = query
+    }
+
+    fun toggleFavorite(card: Card) {
+        viewModelScope.launch {
+            repository.toggleFavorite(card)
+        }
+    }
+
+    fun deleteCard(card: Card) {
+        viewModelScope.launch {
+            repository.deleteCard(card)
+        }
     }
 }

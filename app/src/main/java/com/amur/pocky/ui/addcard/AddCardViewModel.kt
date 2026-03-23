@@ -22,7 +22,12 @@ data class AddCardUiState(
     val color: Int? = null,
     val isEditing: Boolean = false,
     val isSaved: Boolean = false,
-)
+    val isScanned: Boolean = false,
+    val cardNumberError: String? = null,
+) {
+    val isValid: Boolean
+        get() = name.isNotBlank() && cardNumber.isNotBlank() && cardNumberError == null
+}
 
 @HiltViewModel
 class AddCardViewModel @Inject constructor(
@@ -58,12 +63,15 @@ class AddCardViewModel @Inject constructor(
 
     fun initFromScan(data: String?, format: String?) {
         if (data == null) return
+        val detectedFormat = format?.let { f ->
+            try { BarcodeFormat.valueOf(f) } catch (_: Exception) { null }
+        } ?: BarcodeFormat.EAN_13
         _uiState.update {
             it.copy(
                 cardNumber = data,
-                barcodeFormat = format?.let { f ->
-                    try { BarcodeFormat.valueOf(f) } catch (_: Exception) { null }
-                } ?: BarcodeFormat.EAN_13,
+                barcodeFormat = detectedFormat,
+                isScanned = true,
+                cardNumberError = null,
             )
         }
     }
@@ -73,11 +81,30 @@ class AddCardViewModel @Inject constructor(
     }
 
     fun onCardNumberChange(number: String) {
-        _uiState.update { it.copy(cardNumber = number) }
+        val digitsOnly = number.filter { it.isDigit() }
+        _uiState.update {
+            it.copy(
+                cardNumber = digitsOnly,
+                cardNumberError = validateCardNumber(digitsOnly),
+            )
+        }
     }
 
-    fun onFormatChange(format: BarcodeFormat) {
-        _uiState.update { it.copy(barcodeFormat = format) }
+    private fun validateCardNumber(number: String): String? {
+        if (number.isEmpty()) return null
+        if (number.length < 13) return "EAN-13 requires 13 digits (${number.length}/13)"
+        if (number.length > 13) return "Too many digits (${number.length}/13)"
+        if (!isValidEan13CheckDigit(number)) return "Invalid check digit"
+        return null
+    }
+
+    private fun isValidEan13CheckDigit(number: String): Boolean {
+        val digits = number.map { it.digitToInt() }
+        val sum = digits.dropLast(1).mapIndexed { i, d ->
+            if (i % 2 == 0) d else d * 3
+        }.sum()
+        val checkDigit = (10 - sum % 10) % 10
+        return checkDigit == digits.last()
     }
 
     fun onNoteChange(note: String) {
@@ -90,7 +117,7 @@ class AddCardViewModel @Inject constructor(
 
     fun saveCard() {
         val state = _uiState.value
-        if (state.name.isBlank() || state.cardNumber.isBlank()) return
+        if (!state.isValid) return
 
         viewModelScope.launch {
             val card = Card(

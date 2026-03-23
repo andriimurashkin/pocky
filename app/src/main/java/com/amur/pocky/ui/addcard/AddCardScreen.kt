@@ -20,14 +20,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,17 +31,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.amur.pocky.data.model.BarcodeFormat
 import com.amur.pocky.ui.components.BarcodeImage
 
 private val cardColors = listOf(
@@ -90,7 +85,7 @@ fun AddCardScreen(
                 actions = {
                     IconButton(
                         onClick = { viewModel.saveCard() },
-                        enabled = uiState.name.isNotBlank() && uiState.cardNumber.isNotBlank(),
+                        enabled = uiState.isValid,
                     ) {
                         Icon(Icons.Default.Check, contentDescription = "Save")
                     }
@@ -120,44 +115,15 @@ fun AddCardScreen(
                 value = uiState.cardNumber,
                 onValueChange = viewModel::onCardNumberChange,
                 label = { Text("Card number") },
-                placeholder = { Text("Enter barcode digits") },
+                placeholder = { Text("13 digits, e.g. 4820000000017") },
                 singleLine = true,
+                isError = uiState.cardNumberError != null,
+                supportingText = uiState.cardNumberError?.let { error ->
+                    { Text(error) }
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Barcode format dropdown
-            var formatExpanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = formatExpanded,
-                onExpandedChange = { formatExpanded = it },
-            ) {
-                OutlinedTextField(
-                    value = uiState.barcodeFormat.displayName,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Barcode format") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = formatExpanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                )
-                ExposedDropdownMenu(
-                    expanded = formatExpanded,
-                    onDismissRequest = { formatExpanded = false },
-                ) {
-                    BarcodeFormat.entries.forEach { format ->
-                        DropdownMenuItem(
-                            text = { Text(format.displayName) },
-                            onClick = {
-                                viewModel.onFormatChange(format)
-                                formatExpanded = false
-                            },
-                        )
-                    }
-                }
-            }
 
             Spacer(modifier = Modifier.height(12.dp))
 

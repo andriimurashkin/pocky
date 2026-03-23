@@ -3,6 +3,7 @@ package com.amur.pocky.ui.components
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,9 +29,13 @@ fun BarcodeImage(
         Image(
             bitmap = bitmap.asImageBitmap(),
             contentDescription = "Barcode",
-            modifier = modifier
-                .fillMaxWidth()
-                .heightIn(min = 80.dp, max = 200.dp),
+            modifier = if (modifier == Modifier) {
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 80.dp, max = 200.dp)
+            } else {
+                modifier
+            },
             contentScale = ContentScale.Fit,
             filterQuality = FilterQuality.None,
         )

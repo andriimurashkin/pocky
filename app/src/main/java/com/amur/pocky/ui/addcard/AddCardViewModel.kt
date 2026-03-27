@@ -17,7 +17,7 @@ import javax.inject.Inject
 data class AddCardUiState(
     val name: String = "",
     val cardNumber: String = "",
-    val barcodeFormat: BarcodeFormat = BarcodeFormat.EAN_13,
+    val barcodeFormat: BarcodeFormat = BarcodeFormat.CODE_128,
     val note: String = "",
     val color: Int? = null,
     val isEditing: Boolean = false,
@@ -82,29 +82,35 @@ class AddCardViewModel @Inject constructor(
 
     fun onCardNumberChange(number: String) {
         val digitsOnly = number.filter { it.isDigit() }
+        val detected = detectBarcodeFormat(digitsOnly)
         _uiState.update {
             it.copy(
                 cardNumber = digitsOnly,
-                cardNumberError = validateCardNumber(digitsOnly),
+                barcodeFormat = detected.first,
+                cardNumberError = detected.second,
             )
         }
     }
 
-    private fun validateCardNumber(number: String): String? {
-        if (number.isEmpty()) return null
-        if (number.length < 13) return "EAN-13 requires 13 digits (${number.length}/13)"
-        if (number.length > 13) return "Too many digits (${number.length}/13)"
-        if (!isValidEan13CheckDigit(number)) return "Invalid check digit"
-        return null
+    private fun detectBarcodeFormat(number: String): Pair<BarcodeFormat, String?> {
+        if (number.isEmpty()) return BarcodeFormat.CODE_128 to null
+        return when (number.length) {
+            8 -> BarcodeFormat.EAN_8 to validateEanCheckDigit(number)
+            12 -> BarcodeFormat.UPC_A to validateEanCheckDigit(number)
+            13 -> BarcodeFormat.EAN_13 to validateEanCheckDigit(number)
+            else -> BarcodeFormat.CODE_128 to null
+        }
     }
 
-    private fun isValidEan13CheckDigit(number: String): Boolean {
+    private fun validateEanCheckDigit(number: String): String? {
+        if (!number.all { it.isDigit() }) return "Must contain only digits"
         val digits = number.map { it.digitToInt() }
         val sum = digits.dropLast(1).mapIndexed { i, d ->
             if (i % 2 == 0) d else d * 3
         }.sum()
         val checkDigit = (10 - sum % 10) % 10
-        return checkDigit == digits.last()
+        if (checkDigit != digits.last()) return "Invalid check digit"
+        return null
     }
 
     fun onNoteChange(note: String) {

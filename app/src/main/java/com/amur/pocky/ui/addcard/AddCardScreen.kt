@@ -76,7 +76,7 @@ fun AddCardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (uiState.isEditing) "Edit Card" else "Add Card") },
+                title = { Text(if (uiState.isEditing) "Редагувати" else "Нова картка") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -103,9 +103,10 @@ fun AddCardScreen(
             OutlinedTextField(
                 value = uiState.name,
                 onValueChange = viewModel::onNameChange,
-                label = { Text("Card name") },
-                placeholder = { Text("e.g. Silpo, ATB, Rozetka") },
+                label = { Text("Назва картки") },
+                placeholder = { Text("напр. Сільпо, АТБ, Rozetka") },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -114,8 +115,8 @@ fun AddCardScreen(
             OutlinedTextField(
                 value = uiState.cardNumber,
                 onValueChange = viewModel::onCardNumberChange,
-                label = { Text("Card number") },
-                placeholder = { Text("13 digits, e.g. 4820000000017") },
+                label = { Text("Номер картки") },
+                placeholder = { Text("Цифри зі штрихкоду картки") },
                 singleLine = true,
                 isError = uiState.cardNumberError != null,
                 supportingText = uiState.cardNumberError?.let { error ->
@@ -130,7 +131,7 @@ fun AddCardScreen(
             OutlinedTextField(
                 value = uiState.note,
                 onValueChange = viewModel::onNoteChange,
-                label = { Text("Note (optional)") },
+                label = { Text("Нотатка (необов'язково)") },
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3,
             )
@@ -138,7 +139,7 @@ fun AddCardScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Color picker
-            Text("Card color", style = MaterialTheme.typography.labelLarge)
+            Text("Колір картки", style = MaterialTheme.typography.labelLarge)
             Spacer(modifier = Modifier.height(8.dp))
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -168,7 +169,7 @@ fun AddCardScreen(
 
             // Live barcode preview
             if (uiState.cardNumber.isNotBlank()) {
-                Text("Preview", style = MaterialTheme.typography.labelLarge)
+                Text("Попередній перегляд", style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
                 BarcodeImage(
                     cardNumber = uiState.cardNumber,

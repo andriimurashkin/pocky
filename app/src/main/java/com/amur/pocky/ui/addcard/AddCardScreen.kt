@@ -1,5 +1,6 @@
 package com.amur.pocky.ui.addcard
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,18 +9,24 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,15 +39,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.amur.pocky.data.model.BrandRegistry
 import com.amur.pocky.ui.components.BarcodeImage
 
 private val cardColors = listOf(
@@ -100,6 +109,7 @@ fun AddCardScreen(
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
+            // Card name with brand suggestions
             OutlinedTextField(
                 value = uiState.name,
                 onValueChange = viewModel::onNameChange,
@@ -109,6 +119,67 @@ fun AddCardScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 modifier = Modifier.fillMaxWidth(),
             )
+
+            if (uiState.brandSuggestions.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                ) {
+                    uiState.brandSuggestions.forEach { brand ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.onBrandSelect(brand) }
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                        ) {
+                            Image(
+                                painter = painterResource(brand.logoRes),
+                                contentDescription = brand.displayName,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(brand.displayName)
+                        }
+                    }
+                }
+            }
+
+            // Brand badge
+            if (uiState.brandId != null) {
+                val brand = BrandRegistry.findById(uiState.brandId!!)
+                if (brand != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.small)
+                            .background(brand.primaryColor.copy(alpha = 0.1f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) {
+                        Image(
+                            painter = painterResource(brand.logoRes),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = brand.displayName,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = brand.primaryColor,
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Видалити бренд",
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable { viewModel.clearBrand() },
+                            tint = brand.primaryColor,
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -138,30 +209,36 @@ fun AddCardScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Color picker
-            Text("Колір картки", style = MaterialTheme.typography.labelLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                cardColors.forEach { color ->
-                    val isSelected = uiState.color == color.toArgb()
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                            .then(
-                                if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
-                                else Modifier
-                            )
-                            .clickable {
-                                viewModel.onColorChange(
-                                    if (isSelected) null else color.toArgb()
+            // Color picker (hidden when brand is selected)
+            if (uiState.brandId == null) {
+                Text("Колір картки", style = MaterialTheme.typography.labelLarge)
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    cardColors.forEach { color ->
+                        val isSelected = uiState.color == color.toArgb()
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                                .then(
+                                    if (isSelected) Modifier.border(
+                                        3.dp,
+                                        MaterialTheme.colorScheme.onSurface,
+                                        CircleShape,
+                                    )
+                                    else Modifier
                                 )
-                            },
-                    )
+                                .clickable {
+                                    viewModel.onColorChange(
+                                        if (isSelected) null else color.toArgb()
+                                    )
+                                },
+                        )
+                    }
                 }
             }
 

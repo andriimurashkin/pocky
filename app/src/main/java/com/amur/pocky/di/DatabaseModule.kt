@@ -3,6 +3,7 @@ package com.amur.pocky.di
 import android.content.Context
 import androidx.room.Room
 import com.amur.pocky.data.local.CardDao
+import com.amur.pocky.data.local.MIGRATION_1_2
 import com.amur.pocky.data.local.PockyDatabase
 import dagger.Module
 import dagger.Provides
@@ -22,7 +23,7 @@ object DatabaseModule {
             context,
             PockyDatabase::class.java,
             "pocky_database",
-        ).build()
+        ).addMigrations(MIGRATION_1_2).build()
 
     @Provides
     fun provideCardDao(database: PockyDatabase): CardDao = database.cardDao()

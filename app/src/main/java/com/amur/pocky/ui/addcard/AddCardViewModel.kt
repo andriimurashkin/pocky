@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.amur.pocky.data.model.BarcodeFormat
+import com.amur.pocky.data.model.Brand
+import com.amur.pocky.data.model.BrandRegistry
 import com.amur.pocky.data.model.Card
 import com.amur.pocky.data.repository.CardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +26,8 @@ data class AddCardUiState(
     val isSaved: Boolean = false,
     val isScanned: Boolean = false,
     val cardNumberError: String? = null,
+    val brandId: String? = null,
+    val brandSuggestions: List<Brand> = emptyList(),
 ) {
     val isValid: Boolean
         get() = name.isNotBlank() && cardNumber.isNotBlank() && cardNumberError == null
@@ -52,6 +56,7 @@ class AddCardViewModel @Inject constructor(
                                 barcodeFormat = card.barcodeFormat,
                                 note = card.note,
                                 color = card.color,
+                                brandId = card.brandId,
                                 isEditing = true,
                             )
                         }
@@ -77,7 +82,30 @@ class AddCardViewModel @Inject constructor(
     }
 
     fun onNameChange(name: String) {
-        _uiState.update { it.copy(name = name) }
+        val suggestions = BrandRegistry.suggest(name)
+        _uiState.update {
+            it.copy(
+                name = name,
+                brandSuggestions = suggestions,
+            )
+        }
+    }
+
+    fun onBrandSelect(brand: Brand) {
+        _uiState.update {
+            it.copy(
+                name = brand.displayName,
+                brandId = brand.id,
+                brandSuggestions = emptyList(),
+                color = null,
+            )
+        }
+    }
+
+    fun clearBrand() {
+        _uiState.update {
+            it.copy(brandId = null)
+        }
     }
 
     fun onCardNumberChange(number: String) {
@@ -133,6 +161,7 @@ class AddCardViewModel @Inject constructor(
                 barcodeFormat = state.barcodeFormat,
                 note = state.note.trim(),
                 color = state.color,
+                brandId = state.brandId,
             )
             repository.saveCard(card)
             _uiState.update { it.copy(isSaved = true) }

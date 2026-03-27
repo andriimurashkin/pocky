@@ -12,6 +12,7 @@ data class Card(
     val barcodeFormat: BarcodeFormat,
     val note: String = "",
     val color: Int? = null,
+    val brandId: String? = null,
     val isFavorite: Boolean = false,
     val category: String? = null,
     val createdAt: Long = System.currentTimeMillis(),

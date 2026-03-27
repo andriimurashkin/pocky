@@ -1,6 +1,7 @@
 package com.amur.pocky.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -20,11 +21,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.amur.pocky.data.model.BrandRegistry
 import com.amur.pocky.data.model.Card
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -50,48 +54,97 @@ fun CardTile(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Box {
-            Column(
-                modifier = Modifier.padding(16.dp),
-            ) {
-                if (card.color != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .background(
-                                Color(card.color),
-                                MaterialTheme.shapes.small,
+            val brand = card.brandId?.let { BrandRegistry.findById(it) }
+
+            if (brand != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(brand.primaryColor, brand.secondaryColor),
                             ),
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                        )
+                        .padding(16.dp),
+                ) {
+                    Column {
+                        Image(
+                            painter = painterResource(brand.logoRes),
+                            contentDescription = brand.displayName,
+                            modifier = Modifier.size(32.dp),
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = card.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = brand.textColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = card.cardNumber,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = brand.textColor.copy(alpha = 0.8f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (card.note.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = card.note,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = brand.textColor.copy(alpha = 0.7f),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
                 }
+            } else {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                ) {
+                    if (card.color != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp)
+                                .background(
+                                    Color(card.color),
+                                    MaterialTheme.shapes.small,
+                                ),
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
 
-                Text(
-                    text = card.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = card.cardNumber,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                if (card.note.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = card.note,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
+                        text = card.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = card.cardNumber,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    if (card.note.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = card.note,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
 
@@ -99,7 +152,7 @@ fun CardTile(
                 Icon(
                     imageVector = Icons.Filled.Star,
                     contentDescription = "Favorite",
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = if (brand != null) Color.White else MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)

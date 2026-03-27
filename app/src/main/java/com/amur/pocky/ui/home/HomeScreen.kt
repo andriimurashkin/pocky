@@ -2,6 +2,7 @@ package com.amur.pocky.ui.home
 
 import android.app.Activity
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -45,15 +47,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.amur.pocky.data.model.Card
 import com.amur.pocky.BuildConfig
+import com.amur.pocky.data.model.BrandRegistry
 import com.amur.pocky.ui.components.BarcodeImage
 import com.amur.pocky.ui.components.CardTile
 import com.amur.pocky.ui.components.EmptyState
@@ -191,10 +196,20 @@ fun HomeScreen(
         val card = barcodeCard
         val activity = LocalContext.current as? Activity
         val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val brand = card.brandId?.let { BrandRegistry.findById(it) }
         val cardColor = card.color?.let { Color(it) }
+        val bgBrush = if (brand != null) {
+            Brush.verticalGradient(
+                listOf(brand.primaryColor, brand.secondaryColor),
+            )
+        } else null
         val bgColor = cardColor ?: MaterialTheme.colorScheme.surface
-        val textColor = if (cardColor != null) Color.White else MaterialTheme.colorScheme.onSurface
-        val subtextColor = if (cardColor != null) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+        val textColor = if (brand != null) brand.textColor
+            else if (cardColor != null) Color.White
+            else MaterialTheme.colorScheme.onSurface
+        val subtextColor = if (brand != null) brand.textColor.copy(alpha = 0.8f)
+            else if (cardColor != null) Color.White.copy(alpha = 0.8f)
+            else MaterialTheme.colorScheme.onSurfaceVariant
 
         DisposableEffect(Unit) {
             activity?.let { BrightnessManager.setMaxBrightness(it) }
@@ -206,7 +221,10 @@ fun HomeScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(bgColor)
+                .then(
+                    if (bgBrush != null) Modifier.background(bgBrush)
+                    else Modifier.background(bgColor)
+                )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -237,6 +255,14 @@ fun HomeScreen(
                         .padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    if (brand != null) {
+                        Image(
+                            painter = painterResource(brand.logoRes),
+                            contentDescription = brand.displayName,
+                            modifier = Modifier.size(48.dp),
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                     Text(
                         text = card.name,
                         style = MaterialTheme.typography.titleLarge,

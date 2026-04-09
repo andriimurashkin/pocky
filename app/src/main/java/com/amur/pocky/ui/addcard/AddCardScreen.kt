@@ -187,13 +187,13 @@ fun AddCardScreen(
                 value = uiState.cardNumber,
                 onValueChange = viewModel::onCardNumberChange,
                 label = { Text("Номер картки") },
-                placeholder = { Text("Цифри зі штрихкоду картки") },
+                placeholder = { Text("Цифри штрихкоду або дані QR-коду") },
                 singleLine = true,
                 isError = uiState.cardNumberError != null,
                 supportingText = uiState.cardNumberError?.let { error ->
                     { Text(error) }
                 },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 modifier = Modifier.fillMaxWidth(),
             )
 

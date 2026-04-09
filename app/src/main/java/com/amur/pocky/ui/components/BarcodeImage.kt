@@ -26,16 +26,20 @@ fun BarcodeImage(
     }
 
     if (bitmap != null) {
+        val isQr = format == BarcodeFormat.QR_CODE
+        val defaultModifier = if (isQr) {
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 150.dp, max = 300.dp)
+        } else {
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 80.dp, max = 200.dp)
+        }
         Image(
             bitmap = bitmap.asImageBitmap(),
             contentDescription = "Barcode",
-            modifier = if (modifier == Modifier) {
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 80.dp, max = 200.dp)
-            } else {
-                modifier
-            },
+            modifier = if (modifier == Modifier) defaultModifier else modifier,
             contentScale = ContentScale.Fit,
             filterQuality = FilterQuality.None,
         )
